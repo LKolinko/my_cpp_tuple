@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <memory>
 #include <utility>
+#include <type_traits>
+
 
 namespace TupleItems {
     template <size_t ind, typename T>
@@ -41,7 +43,15 @@ struct Tuple : TupleItems::TupleSet<0, Types...> {
     constexpr Tuple(Args&&... args) : Base(std::forward<Args>(args)...) {}
 };
 
-template<size_t ind, typename... Types> requires(ind < sizeof...(Types))
+template <size_t ind, typename... Types> requires(ind < sizeof...(Types))
 decltype(auto) get(Tuple<Types...>& t) {
     return static_cast<TupleItems::TupleUnit<ind, Types...[ind]>&>(t).get();
 }
+
+template <typename... Types>
+struct std::tuple_size<Tuple<Types...>> : public std::integral_constant<size_t, sizeof...(Types)> {};
+
+template <size_t ind, typename... Types>
+struct std::tuple_element<ind, Tuple<Types...>> {
+    using Type = Types...[ind];
+};
