@@ -8,7 +8,12 @@ int main() {
 
     std::tuple<int, std::string, int> a1(1, "abacaba", 1);
 
-    Tuple<int, std::string, int> a(1, "abacaba", 1);
+    Tuple<int, int, int> a(1, 1, 1);
+    Tuple<int, std::string, char> b(1, "abacaba", 1);
+    
+    if ((a <=> a) == std::strong_ordering::equal) {
+        std::cout << "YES" << std::endl;
+    }
 
     std::cout << sizeof(a) << ' ' << sizeof(a1) << std::endl;
 
@@ -22,9 +27,9 @@ int main() {
 
     std::cout << e1 << ' ' << e2 << ' ' << e3 << std::endl;
 
-    std::cout << get<1>(a) << std::endl;
-    get<1>(a) = "aboba";
-    std::cout << get<1>(a) << std::endl;
+    std::cout << a.get<1>() << std::endl;
+    //a.get<1>() = "aboba";
+    std::cout << a.get<1>() << std::endl;
 
     return 0;
 }

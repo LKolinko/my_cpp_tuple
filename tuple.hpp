@@ -3,7 +3,6 @@
 #include <utility>
 #include <type_traits>
 
-
 namespace TupleItems {
     template <size_t ind, typename T>
     struct TupleUnit {
@@ -13,6 +12,10 @@ namespace TupleItems {
         constexpr TupleUnit(T&& item) : item(item) {}
 
         constexpr T& get() {
+            return item;
+        }
+        
+        constexpr const T& get() const {
             return item;
         }
     };
@@ -41,11 +44,35 @@ struct Tuple : TupleItems::TupleSet<0, Types...> {
 
     template <typename... Args>
     constexpr Tuple(Args&&... args) : Base(std::forward<Args>(args)...) {}
+
+    template <size_t ind> requires(ind < sizeof...(Types))
+    decltype(auto) get() {
+        return static_cast<TupleItems::TupleUnit<ind, Types...[ind]>&>(*this).get();
+    }
+
+    template <size_t ind> requires(ind < sizeof...(Types))
+    decltype(auto) get() const {
+        return static_cast<const TupleItems::TupleUnit<ind, Types...[ind]>&>(*this).get();
+    }
 };
 
-template <size_t ind, typename... Types> requires(ind < sizeof...(Types))
-decltype(auto) get(Tuple<Types...>& t) {
-    return static_cast<TupleItems::TupleUnit<ind, Types...[ind]>&>(t).get();
+template <typename... FTypes, typename... STypes>
+requires (
+    sizeof...(FTypes) == sizeof...(STypes) &&
+    ([] <class A, class B> (std::type_identity<A>, std::type_identity<B>) { 
+        return requires (A a, B b) { a <=> b; };
+    } (std::type_identity<FTypes>{}, std::type_identity<STypes>{}) && ...)
+)
+std::strong_ordering operator<=>(const Tuple<FTypes...>& a, const Tuple<STypes...>& b) {
+    std::strong_ordering result = std::strong_ordering::equal;
+    [&] <size_t... Ind> (std::index_sequence<Ind...>) {
+        ([&] <size_t ind> (std::index_sequence<ind>) {
+            if (result == std::strong_ordering::equal) {
+                result = (a.template get<ind>() <=> b.template get<ind>());
+            }
+        } (std::index_sequence<Ind>()), ...);
+    } (std::make_index_sequence<sizeof...(FTypes)>());
+    return result;
 }
 
 template <typename... Types>
