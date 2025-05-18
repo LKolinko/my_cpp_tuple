@@ -1,3 +1,4 @@
+#pragma once
 #include <cstddef>
 #include <memory>
 #include <utility>
@@ -63,7 +64,7 @@ requires (
         return requires (A a, B b) { a <=> b; };
     } (std::type_identity<FTypes>{}, std::type_identity<STypes>{}) && ...)
 )
-std::strong_ordering operator<=>(const Tuple<FTypes...>& a, const Tuple<STypes...>& b) {
+constexpr std::strong_ordering operator<=>(const Tuple<FTypes...>& a, const Tuple<STypes...>& b) {
     std::strong_ordering result = std::strong_ordering::equal;
     [&] <size_t... Ind> (std::index_sequence<Ind...>) {
         ([&] <size_t ind> (std::index_sequence<ind>) {
